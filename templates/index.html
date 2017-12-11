@@ -1,0 +1,163 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.css' %}">
+    <script src="{% static 'jquery-3.2.1.js' %}"></script>
+    <link rel="stylesheet" href="/static/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.css">
+    <script src="/static/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.js"></script>
+    <script src="/static/bootstrap-datetimepicker-master/js/locales/bootstrap-datetimepicker.fr.js"></script>
+
+    <style>
+        .www {
+            background-color: gray;
+        }
+        .disable{
+            background-color: gray;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <p>
+        <h2>会议室预定系统</h2></p>
+        <div class='col-sm-3 pull-right'>
+            <div class="form-group" style="width:250px">
+            <label>选择日期：</label>
+            <!--指定 date标记-->
+            <div class='input-group date' id='datetimepicker1'>
+                <input type='text' class="form-control" />
+                <span class="input-group-addon">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+                <div style="padding: 0 5px;float: left">
+                    <a id="save" class="btn btn-primary">保存</a>
+                </div>
+            </div>
+    </div>
+
+        </div>
+
+
+        <div>
+
+            <table class="table table-bordered" id="tBody">
+                <thead>
+                <tr>
+                    <td>会议室\时间段</td>
+                    {% for time in time_list %}
+                        <td>{{ time.1 }}</td>
+                    {% endfor %}
+                </tr>
+                </thead>
+                <tbody id="wwww">
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+    <p style="margin-left: 750px">
+        <button class="btn btn-primary">提交</button>
+    </p>
+</div>
+<!-- 遮罩层开始 -->
+<div id='shade' class='shade hide'></div>
+<!-- 遮罩层结束 -->
+<!-- 加载层开始 -->
+<div id='loading' class='loading hide'></div>
+<!-- 加载层结束 -->
+
+
+</body>
+<script>
+    Date.prototype.Format = function (fmt) { //author: meizz
+        var o = {
+            "M+": this.getMonth() + 1, //月份
+            "d+": this.getDate(), //日
+            "h+": this.getHours(), //小时
+            "m+": this.getMinutes(), //分
+            "s+": this.getSeconds(), //秒
+            "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+            "S": this.getMilliseconds() //毫秒
+        };
+        if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+        for (var k in o)
+            if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        return fmt;
+    };
+    $(function () {
+        initDatepicker();
+        init_show(new Date().Format('yyyy-MM-dd'));
+
+    })
+
+
+    function initDatepicker(){
+        $('#datetimepicker1').datetimepicker({
+            minView: "month",
+            language: "zh-CN",
+            sideBySide: true,
+            format: 'yyyy-mm-dd',
+            bootcssVer: 3,
+            startDate: new Date(),
+            autoclose: true,
+        }).on('changeDate',changeDate);
+    }
+    function changeDate(v) {
+        CHANGE_DATE = v.date.Format('yyyy-MM-dd');
+{#        alert(CHANGE_DATE, "****");#}
+        init_show(CHANGE_DATE);
+    }
+    function init_show(v) {
+        $('#shade,#loading').removeClass('hide');
+        $.ajax({
+            url: '/show/',
+            type: 'get',
+            dateType: 'JSON',
+            data: {date:v},
+            success: function (arg) {
+                $('#shade,#loading').addClass('hide');
+                data_response = arg
+                if (data_response.status == true) {
+                    $('#wwww').empty();
+                    data = data_response.data
+                    $(data).each(function (i, v) {
+                        $tr = $("<tr>")
+                        $(v).each(function (ii, kk) {
+                            $td = $("<td>")
+                            tt = kk.text
+                            username = kk.username
+                            chosen = kk.chosen
+                            disable= kk.disable
+                            $td.text(tt)
+                            $td.text(username)
+                            console.log(disable,"*****")
+                            if (disable)
+                            {
+                              $td.attr("class",chosen)
+                            }
+                            esle:{
+                                 $td.attr("class",'disable')
+                            }
+
+                            $tr.append($td)
+                        })
+                        $("#wwww").append($tr)
+                    })
+                }
+            }
+        })
+    }
+
+    $(".container").on("click", "td", function () {
+        $(this).toggleClass("www")
+
+    })
+</script>
+
+</html>
