@@ -11,35 +11,63 @@
     <link rel="stylesheet" href="/static/bootstrap-datetimepicker-master/css/bootstrap-datetimepicker.css">
     <script src="/static/bootstrap-datetimepicker-master/js/bootstrap-datetimepicker.js"></script>
     <script src="/static/bootstrap-datetimepicker-master/js/locales/bootstrap-datetimepicker.fr.js"></script>
-
+    <script src="/static/jquery.cookie.js"></script>
     <style>
-        .www {
+        .temp {
             background-color: gray;
         }
-        .disable{
-            background-color: gray;
+
+        table > tbody .chosen {
+            background-color: yellow;
         }
+
+        .shade {
+            position: fixed;
+            z-index: 1040;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #999;
+            filter: alpha(opacity=50);
+            -moz-opacity: 0.5;
+            opacity: 0.5;
+        }
+
+        .loading {
+            position: fixed;
+            z-index: 1050;
+            top: 40%;
+            left: 50%;
+            height: 32px;
+            width: 32px;
+            margin: 0 0 0 -16px;
+            background: url(/static/img/loading.gif);
+        }
+
     </style>
 </head>
 <body>
+  {% csrf_token %}
 <div class="container">
     <div class="row">
         <p>
         <h2>会议室预定系统</h2></p>
+
         <div class='col-sm-3 pull-right'>
             <div class="form-group" style="width:250px">
-            <label>选择日期：</label>
-            <!--指定 date标记-->
-            <div class='input-group date' id='datetimepicker1'>
-                <input type='text' class="form-control" />
-                <span class="input-group-addon">
+                <label>选择日期：</label>
+                <!--指定 date标记-->
+                <div class='input-group date' id='datetimepicker1'>
+                    <input type='text' class="form-control"/>
+                    <span class="input-group-addon">
                     <span class="glyphicon glyphicon-calendar"></span>
                 </span>
-                <div style="padding: 0 5px;float: left">
-                    <a id="save" class="btn btn-primary">保存</a>
+                    <div style="padding: 0 5px;float: left">
+                        <a id="save" class="btn btn-primary">保存</a>
+                    </div>
                 </div>
             </div>
-    </div>
 
         </div>
 
@@ -75,6 +103,7 @@
 
 </body>
 <script>
+
     Date.prototype.Format = function (fmt) { //author: meizz
         var o = {
             "M+": this.getMonth() + 1, //月份
@@ -90,14 +119,18 @@
             if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
         return fmt;
     };
+     var CHANGE_DATE= new Date().Format('yyyy-MM-dd');
     $(function () {
         initDatepicker();
-        init_show(new Date().Format('yyyy-MM-dd'));
+        current_date=new Date().Format('yyyy-MM-dd')
+        init_show(current_date);
+        bindClick();
+        bindSave()
 
     })
 
 
-    function initDatepicker(){
+    function initDatepicker() {
         $('#datetimepicker1').datetimepicker({
             minView: "month",
             language: "zh-CN",
@@ -106,58 +139,125 @@
             bootcssVer: 3,
             startDate: new Date(),
             autoclose: true,
-        }).on('changeDate',changeDate);
+        }).on('changeDate', changeDate);
     }
-    function changeDate(v) {
-        CHANGE_DATE = v.date.Format('yyyy-MM-dd');
-{#        alert(CHANGE_DATE, "****");#}
-        init_show(CHANGE_DATE);
-    }
+
+
+    //获取预定信息
     function init_show(v) {
         $('#shade,#loading').removeClass('hide');
         $.ajax({
             url: '/show/',
             type: 'get',
             dateType: 'JSON',
-            data: {date:v},
+            data: {date: v},
             success: function (arg) {
                 $('#shade,#loading').addClass('hide');
                 data_response = arg
                 if (data_response.status == true) {
                     $('#wwww').empty();
                     data = data_response.data
-                    $(data).each(function (i, v) {
+                    $(data).each(function (i, item) {
                         $tr = $("<tr>")
-                        $(v).each(function (ii, kk) {
+                        $(item).each(function (v, k) {
                             $td = $("<td>")
-                            tt = kk.text
-                            username = kk.username
-                            chosen = kk.chosen
-                            disable= kk.disable
-                            $td.text(tt)
-                            $td.text(username)
-                            console.log(disable,"*****")
-                            if (disable)
-                            {
-                              $td.attr("class",chosen)
-                            }
-                            esle:{
-                                 $td.attr("class",'disable')
-                            }
-
+                            $td.text(k.text)
+                            $.each(k.attrs, function (zz, ww) {
+                                $td.attr(zz, ww)
+                            })
                             $tr.append($td)
                         })
                         $("#wwww").append($tr)
+
                     })
+
                 }
+                else{
+                    alert(data_response.errors)
+                }
+            },
+            error:function () {
+                 $('.shade,.loading').removeClass('hide');
+
             }
         })
+
+
     }
 
-    $(".container").on("click", "td", function () {
-        $(this).toggleClass("www")
+
+   var  Data_Response={"del":{},"add":{}}
+    function bindClick () {
+
+         $(".container").on("click", "td[time_id][disable!='true']", function ()
+         {
+{#            Data_Response={"del":{},"add":{}}#}
+        var ele_tr = $(this).attr("tr_id")
+        var ele_time_id = $(this).attr("time_id")
+        if ($(this).hasClass('chosen')) {
+            $(this).removeClass("chosen").empty()
+            if (Data_Response.del[ele_tr]) {
+                Data_Response.del[ele_tr].push(ele_time_id)
+            } else {
+                Data_Response.del[ele_tr] = [ele_time_id]
+            }
+        }
+        else if($(this).hasClass('temp'))
+        {
+            $(this).removeClass("temp")
+            var index = Data_Response.add[ele_tr].indexOf(ele_time_id);
+            if (index !== -1) {
+                Data_Response.add[ele_tr].splice(index,1);
+            }
+
+        }
+        else
+            {
+                $(this).addClass('temp')
+
+                if (Data_Response.add[ele_tr]) {
+                    Data_Response.add[ele_tr].push(ele_time_id);
+                } else {
+                    Data_Response.add[ele_tr] = [ele_time_id];
+                }
+            }
+        console.log(Data_Response)
+    })
+    }
+    function changeDate(v) {
+        CHANGE_DATE = v.date.Format('yyyy-MM-dd');
+        init_show(CHANGE_DATE);
+    }
+
+    function bindSave () {
+
+         $('#save').on("click",function () {
+                  console.log(CHANGE_DATE),
+
+        $.ajax({
+            'url':'/show/',
+            'type':'post',
+             headers: {"X-CSRFToken": $.cookie('csrftoken')},
+            contentType:'json',
+            'data':JSON.stringify({'data':Data_Response,'date':CHANGE_DATE}),
+            success:function (data) {
+                if (data.status){
+                   init_show(CHANGE_DATE)
+                    Data_Response={"del":{},"add":{}}
+                    console.log(Data_Response)
+                }
+                else{
+                         init_show(CHANGE_DATE)
+                    alert("保存错误，请重新提交")
+                }
+
+            }
+        })
+
 
     })
+    }
+
 </script>
 
 </html>

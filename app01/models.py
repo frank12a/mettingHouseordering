@@ -40,5 +40,5 @@ class Bookings(models.Model):
     #     return  self.user
 
     class Meta:
-        unique_together = ("room", "user", "time_id")
+        unique_together =(("room", "date", "time_id"),)
         verbose_name_plural="预定情况"
