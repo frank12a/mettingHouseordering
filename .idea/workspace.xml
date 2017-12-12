@@ -52,7 +52,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="models.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app01/models.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="231">
@@ -60,15 +60,6 @@
               <folding>
                 <element signature="e#580#809#0" expanded="false" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="app01_bookings" pinned="false" current-in-tab="true">
-        <entry file="das://table:/dd24763d/7640207e-fb02-4242-aca8-c4b8036d60f6/main.app01_bookings">
-          <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-            <state>
-              <filtering enabled="true" />
             </state>
           </provider>
         </entry>
@@ -554,6 +545,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="das://table:/dd24763d/7640207e-fb02-4242-aca8-c4b8036d60f6/main.app01_bookings">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/app01/models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="231">
@@ -561,13 +559,6 @@
           <folding>
             <element signature="e#580#809#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="das://table:/dd24763d/7640207e-fb02-4242-aca8-c4b8036d60f6/main.app01_bookings">
-      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
-        <state>
-          <filtering enabled="true" />
         </state>
       </provider>
     </entry>
